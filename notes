@@ -1,0 +1,35 @@
+11-06-2018
+Hans Mose Jensen
+
+
+Vores primære kommentar til EMODnet data er at de er svært tilgængelige pga. OceanDataView formatet. Data fra Black Sea har omkring 400 kolonner med P01 koder (species, matrix, basis). Vi ville foretrække hvis data kunne formateres som
+
+Lat, Lon, Date, ... , Species, Matrix, Basis, Value, unit, (perhaps methods)
+...
+...
+
+
+
+23-05-2018
+Eugenia Molina
+mmolinajack@inogs.it
+
+Dear all,
+
+please find attached the subset of data of contaminants in biota for Mediterranean and Black Sea (restricted and unrestricted).
+
+The collections are composed of:
+
+-data_from_Mediterranean_Biota_Contaminants_Time_series.txt: 272 stations, 350 parameters
+-data_from_Mediterranean_Biota_Contaminants.txt: 20 stations, 33 parameters
+-Black_Sea_BIOTA.txt: 497 stations, 347 parameters
+
+Please, let us know if you have any doubts or need anything else.
+
+Best regards,
+
+Eugenia
+
+
+
+
