@@ -80,8 +80,13 @@ convert<-function(EMODNETfile){
   df <- df %>% gather(key="col",value="value",colmin:colmax)
   
   # selecting the first 9 columns of data
-  dfval <- df %>% inner_join(dfcolvalue,by="col") %>% select(V1:V9,value,label,P01,P06,-col)
-  dfqual <- df %>% inner_join(dfcolqual,by="col") %>% rename(quality=value) %>% select(V1:V9,label,quality,P01,P06,-col)
+  dfval <- df %>% 
+    inner_join(dfcolvalue,by="col") %>% 
+    select(V1:V9,value,label,P01,P06,-col)
+  dfqual <- df %>% 
+    inner_join(dfcolqual,by="col") %>%
+    rename(quality=value) %>% 
+    select(V1:V9,label,quality,P01,P06,-col)
   
   df <- dfval %>% 
     left_join(dfqual)

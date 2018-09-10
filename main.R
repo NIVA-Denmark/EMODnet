@@ -2,20 +2,26 @@
 library(tidyverse)
 
 source("convert.R")
+source("P01codes.R")
 
 EMODNETfile<-"data/Black_Sea_BIOTA.txt" 
+EMODNETfile<-"data/data_from_Mediterranean_Biota_Contaminants.txt"
+EMODNETfile<-"data/data_from_Mediterranean_Biota_Contaminants_Time_series.txt"
 
 df <- convert(EMODNETfile)
 
+keep <- c("P01","Measurement","MeasBasis",
+          "MeasShort","Matrix","CAS",
+          "Substance","SubstanceShort",
+          "Species","Sex","Subcomponent")
 
+dfP01 <- P01() %>% 
+  select(keep)
 
-P01file<-"data/P01_subcomponentsx.txt" # UTF-8 (BOM)
-P01file <- "data/EMDchem_BlkSea_MedSea_P01_20180523.txt"
+keep <- c("Station","yyyy-mm-ddThh:mm:ss.sss",
+          "Longitude [degrees_east]","Latitude [degrees_north]",
+          "value","quality","P01")
 
-# load file containing list of P01 components
-
-dfP01 <- read.table(P01file,header=T,sep="\t",stringsAsFactors=F,fileEncoding="UTF-8",comment.char="",quote="",allowEscapes=F,na.strings="NULL",fill=T)
-
-
-
-# 1252
+df <- df %>%
+  select(keep) %>%
+  left_join(dfP01,by="P01")
