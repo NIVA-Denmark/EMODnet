@@ -42,8 +42,9 @@ getrows<-function(idx,strlst){
   }
 }
 
-convert<-function(EMODNETfile){ 
-  
+convert<-function(EMODNETfile,infocols=c(1,2,3,4,5,6,7,8,9),timeseries=F,dropmissing=F){ 
+  infocolsid<-infocols
+  infocols<-paste0("V",infocols)
   
   dat <- readLines(con<-file(EMODNETfile, encoding = "utf-8"))
   close(con)
@@ -60,13 +61,16 @@ convert<-function(EMODNETfile){
   nskip<-max(dflist,na.rm=T)
   
   # Get column names from the first line in the data file which is not commented out
-  dfcols <- read.table(EMODNETfile,sep="\t",header=F,stringsAsFactors=F,fileEncoding="UTF-8",
-                       comment.char="",allowEscapes=F,na.strings="NULL",fill=T,skip=nskip) %>% head(1) %>% 
+  dfcols <- read.table(EMODNETfile,sep="\t",header=F,stringsAsFactors=F,
+                       fileEncoding="UTF-8",comment.char="",
+                       allowEscapes=F,na.strings="NULL",
+                       fill=T,skip=nskip) %>% 
+    head(1) %>% 
     gather(key="col")
   
   # Get data
   df <- read.table(EMODNETfile,sep="\t",header=F,stringsAsFactors=F,fileEncoding="UTF-8",
-                   comment.char="",allowEscapes=F,na.strings="NULL",fill=T,skip=nskip+1)
+                   comment.char="",allowEscapes=F,na.strings="NULL",fill=T,skip=nskip+1,quote="")
   
   # Get column names (V1 ... Vn) for the parameters taken from the headers
   dfcolvalue <- dfparams %>% inner_join(dfcols,by=c("label"="value"))
@@ -77,20 +81,40 @@ convert<-function(EMODNETfile){
   colmin<-as.numeric(substr(dfcolvalue$col[1],2,99))
   colmax<-as.numeric(substr(dfcolqual$col[nrow(dfcolqual)],2,99))
   
+  if(timeseries==T){
+    colt1<-dfcols[dfcols$value=="yyyy-mm-ddThh:mm:ss.sss","col"]
+    colt2<-dfcols[dfcols$value=="time_ISO8601","col"]
+    for(i in 2:nrow(df)){
+      df[i,colt1]<-ifelse(df[i,colt1]=="",df[i,colt2],df[i,colt1])
+      for(v in infocols){
+        if(v!=colt1){
+          df[i,v]<-ifelse(is.na(df[i,v]),
+                          df[i-1,v],
+                          ifelse(df[i,v]=="",df[i-1,v],df[i,v]))
+        }
+      }
+    }
+  }
+  
   df <- df %>% gather(key="col",value="value",colmin:colmax)
   
-  # selecting the first 9 columns of data
   dfval <- df %>% 
     inner_join(dfcolvalue,by="col") %>% 
-    select(V1:V9,value,label,P01,P06,-col)
+    select_(.dots=c(infocols,"value","label","P01","P06")) 
   dfqual <- df %>% 
     inner_join(dfcolqual,by="col") %>%
     rename(quality=value) %>% 
-    select(V1:V9,label,quality,P01,P06,-col)
+    select_(.dots=c(infocols,"quality","label","P01","P06")) 
+  
   
   df <- dfval %>% 
-    left_join(dfqual)
+    left_join(dfqual,by=c(infocols,"label","P01","P06"))
   
-  names(df)[1:9]<-dfcols$value[1:9]
+  n<-length(infocols)
+  names(df)[1:n]<-dfcols$value[infocolsid]
+  
+  if(dropmissing==T){
+    df<-df %>% filter(!is.na(value))
+  }
   return(df)
 }

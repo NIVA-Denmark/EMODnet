@@ -2,26 +2,27 @@
 library(tidyverse)
 
 source("convert.R")
-source("P01codes.R")
+source("Read_P01_table.R")
+folder<-"data/"
 
-EMODNETfile<-"data/Black_Sea_BIOTA.txt" 
-EMODNETfile<-"data/data_from_Mediterranean_Biota_Contaminants.txt"
-EMODNETfile<-"data/data_from_Mediterranean_Biota_Contaminants_Time_series.txt"
+EMODNETfile<-"Black_Sea_BIOTA.txt" 
+df1<- convert(paste0(folder,EMODNETfile),infocols=c(2,4,5,6)) %>%
+  left_join(dfP01,by="P01") %>%
+  mutate(srcfile=EMODNETfile)
 
-df <- convert(EMODNETfile)
+EMODNETfile<-"data_from_Mediterranean_Biota_Contaminants.txt"
+df2<- convert(paste0(folder,EMODNETfile),infocols=c(2,4,5,6)) %>%
+  left_join(dfP01,by="P01") %>%
+  mutate(srcfile=EMODNETfile)
 
-keep <- c("P01","Measurement","MeasBasis",
-          "MeasShort","Matrix","CAS",
-          "Substance","SubstanceShort",
-          "Species","Sex","Subcomponent")
+EMODNETfile<-"data_from_Mediterranean_Biota_Contaminants_Time_series.txt"
+df3<- convert(paste0(folder,EMODNETfile),infocols=c(2,4,5,6),timeseries=T,dropmissing=T) %>%
+  left_join(dfP01,by="P01") %>%
+  mutate(srcfile=EMODNETfile)
 
-dfP01 <- P01() %>% 
-  select(keep)
+df<-bind_rows(mutate_all(df1, as.character),
+              mutate_all(df2, as.character),
+              mutate_all(df3, as.character))
 
-keep <- c("Station","yyyy-mm-ddThh:mm:ss.sss",
-          "Longitude [degrees_east]","Latitude [degrees_north]",
-          "value","quality","P01")
+write.table(df,file="EMODNET_contaminants.txt",row.names=FALSE,quote=FALSE,sep='\t',na="")
 
-df <- df %>%
-  select(keep) %>%
-  left_join(dfP01,by="P01")
